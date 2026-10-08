@@ -1,168 +1,332 @@
-<title>Pixel Snake</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<title>Dracula's Feast</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
 <style>
   :root{
-    --bg:#12151a;
-    --surface:#1b2027;
-    --surface-2:#232a32;
-    --ink:#eef1f3;
-    --ink-soft:#8f9ba5;
-    --snake:#7fe09a;
-    --snake-head:#b4f3c3;
-    --food:#ff8f66;
-    --grid-line: rgba(255,255,255,0.05);
-    --danger:#ff6b6b;
+    --bg:#0b0508;
+    --surface:#1a0c11;
+    --surface-2:#26121a;
+    --ink:#efe6d8;
+    --ink-soft:#a99a96;
+    --blood:#e0344d;
+    --blood-deep:#9a1428;
+    --gold:#c9a24b;
+    --line:rgba(201,162,75,0.18);
     --radius:10px;
   }
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
   body{
     margin:0;
-    background:
-      radial-gradient(ellipse at 50% -10%, #1c2430 0%, var(--bg) 55%);
+    background: radial-gradient(ellipse at 50% -10%, #2b0e17 0%, var(--bg) 58%);
     color:var(--ink);
-    font-family:'Sora', system-ui, sans-serif;
+    font-family:'EB Garamond', Garamond, 'Cormorant Garamond', Georgia, serif;
+    font-size:17px;
     display:flex;
     align-items:center;
     justify-content:center;
     min-height:100vh;
-    padding:2rem 1rem;
+    padding:1.6rem 1rem;
   }
-  .mono{ font-family:'JetBrains Mono', ui-monospace, monospace; font-variant-numeric:tabular-nums; }
-  .pixel{ font-family:'Press Start 2P', monospace; }
+  button{ font-family:inherit; }
+  .num{ font-variant-numeric: lining-nums tabular-nums; }
 
   .wrap{ width:100%; max-width:30rem; }
 
-  .titlebar{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:1rem; gap:1rem; flex-wrap:wrap; }
+  .titlebar{ text-align:center; margin-bottom:.9rem; }
   .titlebar h1{
-    font-family:'Press Start 2P', monospace; font-size:1.1rem; margin:0; color:var(--snake);
-    text-shadow: 0 0 18px rgba(127,224,154,0.45);
-    letter-spacing:.02em;
+    font-family:inherit; font-weight:600; font-size:2rem; margin:0; color:var(--blood);
+    font-variant:small-caps; letter-spacing:.06em;
+    text-shadow: 0 0 22px rgba(224,52,77,0.4);
   }
-  .titlebar p{ margin:.4rem 0 0; color:var(--ink-soft); font-size:.85rem; }
+  .titlebar p{ margin:.2rem 0 0; color:var(--ink-soft); font-size:1rem; font-style:italic; }
 
   .hud{
     display:flex; justify-content:space-between; align-items:center; gap:1rem;
-    background:var(--surface); border:1px solid rgba(255,255,255,0.06); border-radius:var(--radius);
-    padding:.9rem 1.1rem; margin-bottom:.9rem;
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:.7rem 1.1rem; margin-bottom:.8rem;
   }
-  .hud .stat{ display:flex; flex-direction:column; gap:.2rem; }
-  .hud .stat span:first-child{ font-size:.65rem; text-transform:uppercase; letter-spacing:.12em; color:var(--ink-soft); }
-  .hud .stat span:last-child{ font-size:1.2rem; font-weight:600; }
-  .hud .stat.score span:last-child{ color:var(--snake); }
-  .hud .stat.best span:last-child{ color:var(--food); }
+  .hud .stat{ display:flex; flex-direction:column; gap:0; line-height:1.15; }
+  .hud .stat span:first-child{ font-size:.82rem; font-variant:small-caps; letter-spacing:.12em; color:var(--ink-soft); }
+  .hud .stat span:last-child{ font-size:1.5rem; font-weight:600; }
+  .hud .stat.score span:last-child{ color:var(--blood); }
+  .hud .stat.best span:last-child{ color:var(--gold); }
   .pause-btn{
-    background:var(--surface-2); color:var(--ink); border:1px solid rgba(255,255,255,0.08);
-    border-radius:8px; padding:.6rem .9rem; font-family:'Sora'; font-size:.8rem; cursor:pointer;
+    background:var(--surface-2); color:var(--ink); border:1px solid var(--line);
+    border-radius:8px; padding:.5rem 1rem; font-size:1rem; cursor:pointer;
   }
-  .pause-btn:hover{ border-color:var(--snake); color:var(--snake); }
+  .pause-btn:hover{ border-color:var(--blood); color:var(--blood); }
 
   .board-frame{
     position:relative; border-radius:var(--radius); overflow:hidden;
-    background:#0c0f12;
-    border:1px solid rgba(255,255,255,0.07);
-    box-shadow: 0 30px 60px -30px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(127,224,154,0.04);
+    background:#0a0407;
+    border:1px solid rgba(201,162,75,0.25);
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(224,52,77,0.06);
   }
   .board-frame::after{
     content:""; position:absolute; inset:0; pointer-events:none;
-    background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
-    mix-blend-mode:overlay;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.5) 100%);
   }
   canvas{ display:block; width:100%; height:auto; touch-action:none; }
 
   .overlay{
-    position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:.9rem;
-    background:rgba(12,15,18,0.86); text-align:center; padding:1.5rem;
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:.7rem;
+    background:rgba(11,5,8,0.9); text-align:center; padding:1.5rem; z-index:2;
   }
   .overlay.show{ display:flex; }
-  .overlay h2{ font-family:'Press Start 2P', monospace; font-size:1rem; margin:0; color:var(--ink); }
-  .overlay h2.danger{ color:var(--danger); }
-  .overlay p{ margin:0; color:var(--ink-soft); font-size:.85rem; max-width:20rem; line-height:1.6; }
-  .overlay .score-line{ font-family:'JetBrains Mono'; color:var(--snake); font-size:1rem; }
-  .start-btn{
-    margin-top:.4rem; background:var(--snake); color:#0c1a0f; border:none; border-radius:30px;
-    padding:.8rem 1.8rem; font-family:'Sora'; font-weight:700; font-size:.9rem; cursor:pointer;
+  .overlay h2{
+    font-weight:600; font-size:1.7rem; margin:0; color:var(--ink);
+    font-variant:small-caps; letter-spacing:.08em;
   }
-  .start-btn:hover{ filter:brightness(1.08); }
+  .overlay h2.danger{ color:var(--blood); }
+  .overlay p{ margin:0; color:var(--ink-soft); font-size:1.05rem; max-width:21rem; line-height:1.45; }
+  .overlay .score-line{ color:var(--gold); font-size:1.2rem; }
+  .start-btn{
+    margin-top:.3rem; background:var(--blood-deep); color:var(--ink); border:1px solid var(--blood); border-radius:30px;
+    padding:.6rem 1.8rem; font-weight:600; font-size:1.1rem; letter-spacing:.03em; cursor:pointer;
+  }
+  .start-btn:hover{ background:var(--blood); }
+
+  .lastbite{ margin:.8rem 0 0; text-align:center; color:var(--ink-soft); font-style:italic; font-size:1rem; }
+  .lastbite b{ color:var(--gold); font-weight:500; }
 
   .controls-hint{
-    margin-top:1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem;
-    color:var(--ink-soft); font-size:.78rem; flex-wrap:wrap;
+    margin-top:.5rem; display:flex; justify-content:space-between; align-items:center; gap:1rem;
+    color:var(--ink-soft); font-size:.92rem; flex-wrap:wrap;
   }
-  .keys{ display:inline-flex; gap:.3rem; }
+  .keys{ display:inline-flex; gap:.3rem; align-items:center; }
   kbd{
-    font-family:'JetBrains Mono'; font-size:.72rem; background:var(--surface-2); color:var(--ink);
-    border:1px solid rgba(255,255,255,0.1); border-bottom-width:2px; border-radius:5px; padding:.15rem .4rem;
+    font-family:inherit; font-size:.85rem; background:var(--surface-2); color:var(--ink);
+    border:1px solid rgba(255,255,255,0.12); border-bottom-width:2px; border-radius:5px; padding:0 .4rem;
   }
-  :focus-visible{ outline:2px solid var(--snake); outline-offset:3px; }
+  :focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
   @media (prefers-reduced-motion: reduce){ *{ transition-duration:.001ms !important; } }
 </style>
 
 <div class="wrap">
   <div class="titlebar">
-    <div>
-      <h1>SNAKE</h1>
-      <p>Arrow keys or swipe. Eat the dot, don't eat yourself.</p>
-    </div>
+    <h1>Dracula's Feast</h1>
+    <p>Arrow keys or swipe. Devour the guests, don't cross your own trail.</p>
   </div>
 
   <div class="hud">
-    <div class="stat score"><span>Score</span><span class="mono" id="score">0</span></div>
-    <div class="stat best"><span>Best</span><span class="mono" id="best">0</span></div>
+    <div class="stat score"><span>Score</span><span class="num" id="score">0</span></div>
+    <div class="stat best"><span>Best</span><span class="num" id="best">0</span></div>
     <button class="pause-btn" id="pauseBtn" type="button">Pause</button>
   </div>
 
   <div class="board-frame" id="boardFrame">
-    <canvas id="board" width="400" height="400" role="img" aria-label="Snake game board"></canvas>
+    <canvas id="board" width="400" height="400" role="img" aria-label="Dracula snake game board"></canvas>
 
     <div class="overlay show" id="startOverlay">
-      <h2 class="pixel">READY?</h2>
-      <p>Guide the snake to the dots. Each one makes you longer — and a little faster. Hitting a wall or yourself ends the run.</p>
-      <button class="start-btn" id="startBtn" type="button">Start game</button>
+      <h2>Ready, Count?</h2>
+      <p>Guide the Count to his guests. Each one lengthens the trail of blood &mdash; and quickens the night. A wall or your own trail ends the hunt.</p>
+      <button class="start-btn" id="startBtn" type="button">Begin the hunt</button>
     </div>
 
     <div class="overlay" id="overOverlay">
-      <h2 class="pixel danger">GAME OVER</h2>
-      <p class="score-line">Score <span id="finalScore">0</span> · Best <span id="finalBest">0</span></p>
-      <button class="start-btn" id="retryBtn" type="button">Play again</button>
+      <h2 class="danger">Dawn breaks</h2>
+      <p class="score-line num">Score <span id="finalScore">0</span> &middot; Best <span id="finalBest">0</span></p>
+      <button class="start-btn" id="retryBtn" type="button">Hunt again</button>
     </div>
 
     <div class="overlay" id="pauseOverlay">
-      <h2 class="pixel">PAUSED</h2>
+      <h2>Paused</h2>
       <button class="start-btn" id="resumeBtn" type="button">Resume</button>
     </div>
   </div>
 
+  <p class="lastbite" id="lastBite">Last guest: <b>none yet</b></p>
+
   <div class="controls-hint">
-    <span class="keys"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move</span>
+    <span class="keys"><kbd>&uarr;</kbd><kbd>&darr;</kbd><kbd>&larr;</kbd><kbd>&rarr;</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move</span>
     <span><kbd>Space</kbd> to pause</span>
   </div>
 </div>
 
 <script>
 (function(){
-  var GRID = 20;
+  var GRID = 16;
   var canvas = document.getElementById('board');
   var ctx = canvas.getContext('2d');
   var scoreEl = document.getElementById('score');
   var bestEl = document.getElementById('best');
   var finalScoreEl = document.getElementById('finalScore');
   var finalBestEl = document.getElementById('finalBest');
+  var lastBiteEl = document.getElementById('lastBite');
   var startOverlay = document.getElementById('startOverlay');
   var overOverlay = document.getElementById('overOverlay');
   var pauseOverlay = document.getElementById('pauseOverlay');
   var pauseBtn = document.getElementById('pauseBtn');
 
+  /* ---------- Sprites: Dracula + five guests (heads only) ----------
+     Everything is drawn in a unit square (0..1) so it scales to any cell size.
+     Characters are the five main players from Bram Stoker's 1897 novel
+     (public domain), drawn as original stylized heads. */
+  var GUESTS = ['Jonathan Harker', 'Mina Harker', 'Professor Van Helsing', 'Lucy Westenra', 'Renfield'];
+  var OUTLINE = 'rgba(18,6,9,0.9)';
+
+  function ell(g, cx, cy, rx, ry){ g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2); }
+  function dot(g, x, y, r, color){ g.fillStyle = color; g.beginPath(); g.arc(x, y, r, 0, Math.PI*2); g.fill(); }
+  function face(g, skin, cx, cy, rx, ry){
+    ell(g, cx, cy, rx, ry); g.fillStyle = skin; g.fill();
+    g.lineWidth = 0.035; g.strokeStyle = OUTLINE; g.stroke();
+  }
+  function line(g, x1, y1, x2, y2, w, color){
+    g.strokeStyle = color; g.lineWidth = w; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+  }
+
+  function drawDracula(g){
+    // cape collar
+    g.fillStyle = '#16050a';
+    g.beginPath(); g.moveTo(.0,1); g.lineTo(.05,.34); g.lineTo(.27,.64); g.lineTo(.73,.64); g.lineTo(.95,.34); g.lineTo(1,1); g.closePath(); g.fill();
+    g.fillStyle = '#a3162d';
+    g.beginPath(); g.moveTo(.13,1); g.lineTo(.13,.5); g.lineTo(.3,.72); g.lineTo(.7,.72); g.lineTo(.87,.5); g.lineTo(.87,1); g.closePath(); g.fill();
+    // pointed ears
+    g.fillStyle = '#ece4d2'; g.lineWidth = .03; g.strokeStyle = OUTLINE;
+    g.beginPath(); g.moveTo(.25,.44); g.lineTo(.12,.3); g.lineTo(.24,.58); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(.75,.44); g.lineTo(.88,.3); g.lineTo(.76,.58); g.closePath(); g.fill(); g.stroke();
+    // face
+    face(g, '#ece4d2', .5, .5, .27, .34);
+    // slicked hair with widow's peak
+    g.fillStyle = '#0a0a10';
+    g.beginPath(); g.moveTo(.22,.46); g.bezierCurveTo(.17,.06,.83,.06,.78,.46);
+    g.bezierCurveTo(.72,.33,.6,.29,.5,.4); g.bezierCurveTo(.4,.29,.28,.33,.22,.46); g.fill();
+    // brows + red eyes
+    line(g, .3,.43, .44,.49, .04, '#0a0a10'); line(g, .7,.43, .56,.49, .04, '#0a0a10');
+    ell(g, .39,.54,.055,.038); g.fillStyle = '#ff3b55'; g.fill();
+    ell(g, .61,.54,.055,.038); g.fill();
+    dot(g, .39,.54,.017,'#2a0309'); dot(g, .61,.54,.017,'#2a0309');
+    // nose, mouth, fangs
+    line(g, .5,.56, .48,.64, .02, 'rgba(0,0,0,.28)');
+    line(g, .39,.7, .61,.7, .03, '#4a0c18');
+    g.fillStyle = '#fff'; g.strokeStyle = OUTLINE; g.lineWidth = .014;
+    g.beginPath(); g.moveTo(.42,.7); g.lineTo(.47,.7); g.lineTo(.445,.82); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(.53,.7); g.lineTo(.58,.7); g.lineTo(.555,.82); g.closePath(); g.fill(); g.stroke();
+    dot(g, .445,.855,.022,'#e0344d');
+  }
+
+  function drawHarker(g){
+    face(g, '#f0c59c', .5, .55, .29, .33);
+    g.fillStyle = '#5a3a22';
+    g.beginPath(); g.moveTo(.2,.5); g.bezierCurveTo(.14,.04,.86,.04,.8,.5);
+    g.bezierCurveTo(.76,.36,.62,.28,.46,.31); g.bezierCurveTo(.34,.3,.24,.38,.2,.5); g.fill();
+    line(g, .3,.45, .43,.46, .035, '#4a2e1b'); line(g, .7,.45, .57,.46, .035, '#4a2e1b');
+    dot(g, .4,.54,.04,'#1a0f0a'); dot(g, .6,.54,.04,'#1a0f0a');
+    g.fillStyle = '#4a2e1b';
+    g.beginPath(); g.moveTo(.33,.68); g.quadraticCurveTo(.5,.58,.67,.68); g.quadraticCurveTo(.5,.74,.33,.68); g.fill();
+    line(g, .43,.79, .57,.79, .025, '#7a3a2a');
+  }
+
+  function drawMina(g){
+    ell(g, .5,.58,.37,.4); g.fillStyle = '#3b2417'; g.fill();
+    dot(g, .5,.11,.13,'#3b2417');
+    face(g, '#f3d2b6', .5, .56, .27, .32);
+    g.fillStyle = '#3b2417';
+    g.beginPath(); g.moveTo(.23,.55); g.bezierCurveTo(.15,.1,.85,.1,.77,.55);
+    g.bezierCurveTo(.74,.36,.6,.26,.5,.26); g.bezierCurveTo(.4,.26,.26,.36,.23,.55); g.fill();
+    dot(g, .4,.56,.038,'#2a1810'); dot(g, .6,.56,.038,'#2a1810');
+    line(g, .31,.48, .43,.49, .028, '#3b2417'); line(g, .69,.48, .57,.49, .028, '#3b2417');
+    dot(g, .32,.66,.05,'rgba(224,100,120,.35)'); dot(g, .68,.66,.05,'rgba(224,100,120,.35)');
+    ell(g, .5,.73,.07,.032); g.fillStyle = '#b5435a'; g.fill();
+  }
+
+  function drawVanHelsing(g){
+    // wild white hair
+    g.fillStyle = '#f3f3ee'; g.strokeStyle = 'rgba(80,70,70,.6)'; g.lineWidth = .02;
+    [[.2,.34,.15],[.3,.18,.16],[.5,.12,.17],[.7,.18,.16],[.8,.34,.15],[.14,.52,.11],[.86,.52,.11]].forEach(function(c){
+      g.beginPath(); g.arc(c[0],c[1],c[2],0,Math.PI*2); g.fill(); g.stroke();
+    });
+    face(g, '#e5b890', .5, .56, .27, .31);
+    g.fillStyle = '#f3f3ee';
+    g.beginPath(); g.moveTo(.26,.36); g.bezierCurveTo(.32,.2,.68,.2,.74,.36); g.bezierCurveTo(.6,.3,.4,.3,.26,.36); g.fill();
+    // bushy brows
+    line(g, .28,.46, .44,.47, .055, '#f3f3ee'); line(g, .72,.46, .56,.47, .055, '#f3f3ee');
+    // round spectacles
+    g.strokeStyle = '#c9a24b'; g.lineWidth = .03;
+    g.beginPath(); g.arc(.38,.56,.095,0,Math.PI*2); g.stroke();
+    g.beginPath(); g.arc(.62,.56,.095,0,Math.PI*2); g.stroke();
+    line(g, .475,.55, .525,.55, .025, '#c9a24b');
+    dot(g, .38,.56,.028,'#1a0f0a'); dot(g, .62,.56,.028,'#1a0f0a');
+    // moustache + goatee
+    g.fillStyle = '#f3f3ee'; g.strokeStyle = 'rgba(80,70,70,.5)'; g.lineWidth = .015;
+    g.beginPath(); g.moveTo(.32,.69); g.quadraticCurveTo(.5,.6,.68,.69); g.quadraticCurveTo(.5,.76,.32,.69); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(.38,.78); g.quadraticCurveTo(.5,1.04,.62,.78); g.quadraticCurveTo(.5,.82,.38,.78); g.fill(); g.stroke();
+  }
+
+  function drawLucy(g){
+    // long wavy blonde hair behind
+    ell(g, .5,.62,.4,.46); g.fillStyle = '#e3b34f'; g.fill();
+    g.lineWidth = .025; g.strokeStyle = 'rgba(120,80,20,.5)'; g.stroke();
+    face(g, '#f7dcc8', .5, .54, .26, .31);
+    g.fillStyle = '#e3b34f';
+    g.beginPath(); g.moveTo(.24,.52); g.bezierCurveTo(.16,.06,.84,.06,.76,.52);
+    g.bezierCurveTo(.72,.34,.6,.26,.5,.28); g.bezierCurveTo(.4,.26,.28,.34,.24,.52); g.fill();
+    // red bow
+    g.fillStyle = '#c42440';
+    g.beginPath(); g.moveTo(.76,.2); g.lineTo(.9,.1); g.lineTo(.9,.3); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(.76,.2); g.lineTo(.62,.1); g.lineTo(.62,.3); g.closePath(); g.fill();
+    dot(g, .76,.2,.035,'#8a1428');
+    dot(g, .4,.55,.045,'#4a7fb5'); dot(g, .6,.55,.045,'#4a7fb5');
+    dot(g, .4,.55,.018,'#12263a'); dot(g, .6,.55,.018,'#12263a');
+    line(g, .32,.47, .44,.49, .024, '#a67a2a'); line(g, .68,.47, .56,.49, .024, '#a67a2a');
+    dot(g, .31,.65,.05,'rgba(240,120,130,.35)'); dot(g, .69,.65,.05,'rgba(240,120,130,.35)');
+    ell(g, .5,.72,.065,.03); g.fillStyle = '#d4566e'; g.fill();
+  }
+
+  function drawRenfield(g){
+    // wild, spiky grey-brown hair
+    g.fillStyle = '#6e6250'; g.strokeStyle = OUTLINE; g.lineWidth = .025;
+    g.beginPath(); g.moveTo(.16,.55); g.lineTo(.06,.36); g.lineTo(.2,.38); g.lineTo(.12,.16); g.lineTo(.3,.26);
+    g.lineTo(.3,.04); g.lineTo(.45,.2); g.lineTo(.55,.0); g.lineTo(.62,.2); g.lineTo(.78,.05); g.lineTo(.76,.27);
+    g.lineTo(.94,.2); g.lineTo(.84,.4); g.lineTo(.96,.4); g.lineTo(.84,.55); g.closePath(); g.fill(); g.stroke();
+    face(g, '#d6c9a6', .5, .58, .27, .32);
+    g.fillStyle = '#6e6250';
+    g.beginPath(); g.moveTo(.26,.42); g.lineTo(.34,.3); g.lineTo(.42,.38); g.lineTo(.5,.28); g.lineTo(.58,.38); g.lineTo(.66,.3); g.lineTo(.74,.42);
+    g.quadraticCurveTo(.5,.34,.26,.42); g.fill();
+    line(g, .3,.42, .44,.4, .03, '#3a3226'); line(g, .7,.42, .56,.4, .03, '#3a3226');
+    // wide crazed eyes
+    dot(g, .38,.52,.08,'#fff'); dot(g, .62,.52,.08,'#fff');
+    g.strokeStyle = OUTLINE; g.lineWidth = .016;
+    g.beginPath(); g.arc(.38,.52,.08,0,Math.PI*2); g.stroke(); g.beginPath(); g.arc(.62,.52,.08,0,Math.PI*2); g.stroke();
+    dot(g, .4,.54,.028,'#1a0f0a'); dot(g, .6,.5,.028,'#1a0f0a');
+    // manic grin
+    g.beginPath(); g.moveTo(.3,.7); g.quadraticCurveTo(.5,.92,.7,.7); g.quadraticCurveTo(.5,.74,.3,.7); g.closePath();
+    g.fillStyle = '#3a0c14'; g.fill();
+    g.fillStyle = '#fff'; g.beginPath(); g.moveTo(.33,.71); g.quadraticCurveTo(.5,.78,.67,.71); g.lineTo(.64,.76); g.quadraticCurveTo(.5,.82,.36,.76); g.closePath(); g.fill();
+  }
+
+  var GUEST_DRAWERS = [drawHarker, drawMina, drawVanHelsing, drawLucy, drawRenfield];
+
+  function makeSprite(px, drawFn){
+    var c = document.createElement('canvas');
+    c.width = c.height = px;
+    var g = c.getContext('2d');
+    g.scale(px, px);
+    drawFn(g);
+    return c;
+  }
+
+  var dracula, guestSprites = [];
+  function buildSprites(){
+    var cell = canvas.width / GRID;
+    var px = Math.max(16, Math.ceil(cell * 1.5));
+    dracula = makeSprite(px, drawDracula);
+    guestSprites = GUEST_DRAWERS.map(function(fn){ return makeSprite(px, fn); });
+  }
+
+  /* ---------- Game state ---------- */
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
   function sizeCanvas(){
     var cssSize = canvas.clientWidth || 400;
-    canvas.width = cssSize * dpr;
-    canvas.height = cssSize * dpr;
+    canvas.width = Math.round(cssSize * dpr);
+    canvas.height = Math.round(cssSize * dpr);
+    buildSprites();
   }
 
   var best = 0;
   try{
-    var stored = localStorage.getItem('pixelSnakeBest');
+    var stored = localStorage.getItem('draculaFeastBest');
     if(stored) best = parseInt(stored, 10) || 0;
   }catch(e){}
   bestEl.textContent = best;
@@ -175,63 +339,92 @@
     dir = {x:1,y:0};
     nextDir = {x:1,y:0};
     score = 0;
-    speedMs = 140;
+    speedMs = 150;
     scoreEl.textContent = '0';
+    lastBiteEl.innerHTML = 'Last guest: <b>none yet</b>';
+    food = null;
     placeFood();
   }
 
   function placeFood(){
-    var cell;
+    var cell, prevKind = food ? food.kind : -1, kind;
     do{
       cell = { x: Math.floor(Math.random()*GRID), y: Math.floor(Math.random()*GRID) };
     } while(snake.some(function(s){ return s.x===cell.x && s.y===cell.y; }));
+    do{ kind = Math.floor(Math.random()*GUESTS.length); } while(kind === prevKind);
+    cell.kind = kind;
     food = cell;
+  }
+
+  function drawDrop(cx, cy, size, angle, color){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.scale(size, size);
+    ctx.beginPath();
+    ctx.moveTo(0, -0.5);
+    ctx.bezierCurveTo(0.08, -0.26, 0.34, -0.1, 0.34, 0.14);
+    ctx.arc(0, 0.14, 0.34, 0, Math.PI, false);
+    ctx.bezierCurveTo(-0.34, -0.1, -0.08, -0.26, 0, -0.5);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    // glossy highlight
+    ctx.beginPath();
+    ctx.ellipse(-0.12, 0.1, 0.07, 0.12, -0.4, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function lerpColor(a, b, t){
+    var r = Math.round(a[0] + (b[0]-a[0])*t), g = Math.round(a[1] + (b[1]-a[1])*t), bl = Math.round(a[2] + (b[2]-a[2])*t);
+    return 'rgb(' + r + ',' + g + ',' + bl + ')';
   }
 
   function draw(){
     var size = canvas.width;
     var cell = size / GRID;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0,0,size,size);
 
-    ctx.fillStyle = '#0c0f12';
+    ctx.fillStyle = '#0a0407';
     ctx.fillRect(0,0,size,size);
 
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-line').trim() || 'rgba(255,255,255,0.05)';
+    ctx.strokeStyle = 'rgba(160,30,50,0.09)';
     ctx.lineWidth = 1;
     for(var i=1;i<GRID;i++){
       ctx.beginPath(); ctx.moveTo(i*cell,0); ctx.lineTo(i*cell,size); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(0,i*cell); ctx.lineTo(size,i*cell); ctx.stroke();
     }
 
-    // food
+    // guest (head only) with a faint golden halo
     var fx = food.x*cell + cell/2, fy = food.y*cell + cell/2;
-    ctx.fillStyle = '#ff8f66';
-    ctx.beginPath();
-    ctx.arc(fx, fy, cell*0.32, 0, Math.PI*2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(255,143,102,0.25)';
-    ctx.beginPath();
-    ctx.arc(fx, fy, cell*0.55, 0, Math.PI*2);
-    ctx.fill();
+    var halo = ctx.createRadialGradient(fx, fy, cell*0.2, fx, fy, cell*0.8);
+    halo.addColorStop(0, 'rgba(201,162,75,0.28)');
+    halo.addColorStop(1, 'rgba(201,162,75,0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(fx, fy, cell*0.8, 0, Math.PI*2); ctx.fill();
+    var fs = cell * 1.4;
+    ctx.drawImage(guestSprites[food.kind], fx - fs/2, fy - fs/2, fs, fs);
 
-    // snake
-    for(var j=0;j<snake.length;j++){
+    // blood-drop trail, tail first so the head sits on top
+    var n = snake.length;
+    ctx.shadowColor = 'rgba(224,52,77,0.55)';
+    ctx.shadowBlur = cell * 0.25;
+    for(var j = n - 1; j >= 1; j--){
       var s = snake[j];
-      var pad = cell*0.09;
-      ctx.fillStyle = j===0 ? '#b4f3c3' : '#7fe09a';
-      roundRect(ctx, s.x*cell+pad, s.y*cell+pad, cell-pad*2, cell-pad*2, cell*0.22);
-      ctx.fill();
+      var t = n > 2 ? (j - 1) / (n - 1) : 0;
+      var angle = 0; // drops always hang upright
+      var dsize = cell * (1.12 - 0.3 * t);
+      drawDrop(s.x*cell + cell/2, s.y*cell + cell/2 + cell*0.02, dsize, angle, lerpColor([232,52,80],[110,14,30], t));
     }
-  }
+    ctx.shadowBlur = 0;
 
-  function roundRect(ctx,x,y,w,h,r){
-    ctx.beginPath();
-    ctx.moveTo(x+r,y);
-    ctx.arcTo(x+w,y,x+w,y+h,r);
-    ctx.arcTo(x+w,y+h,x,y+h,r);
-    ctx.arcTo(x,y+h,x,y,r);
-    ctx.arcTo(x,y,x+w,y,r);
-    ctx.closePath();
+    // Dracula's head
+    var h = snake[0], hs = cell * 1.4;
+    ctx.drawImage(dracula, h.x*cell + cell/2 - hs/2, h.y*cell + cell/2 - hs/2, hs, hs);
   }
 
   function step(){
@@ -248,8 +441,9 @@
     if(head.x === food.x && head.y === food.y){
       score += 10;
       scoreEl.textContent = score;
-      if(score > best){ best = score; bestEl.textContent = best; try{ localStorage.setItem('pixelSnakeBest', String(best)); }catch(e){} }
-      if(speedMs > 70 && score % 50 === 0){ speedMs -= 8; }
+      lastBiteEl.innerHTML = 'Last guest: <b>' + GUESTS[food.kind] + '</b>';
+      if(score > best){ best = score; bestEl.textContent = best; try{ localStorage.setItem('draculaFeastBest', String(best)); }catch(e){} }
+      if(speedMs > 75 && score % 50 === 0){ speedMs -= 8; }
       placeFood();
     } else {
       snake.pop();
